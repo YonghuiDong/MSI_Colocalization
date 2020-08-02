@@ -4,7 +4,7 @@ library(BiocParallel)
 library(plotly)
 path <- paste0("Data/MG/MG1", ".imzML")
 ## Attention: The resolution parameter is important 
-MG <- readMSIData(path, resolution = 6, units = "ppm", attach.only = T)
+MG <- readMSIData(path, resolution = 5, units = "ppm", attach.only = T)
 ## check resolution parameter by plotting known m/z
 image(MG, mz = 611.160, smooth.image = "gaussian", plusminus = 0.003, 
       colorscale=magma, contrast.enhance="suppression")
@@ -14,7 +14,7 @@ image(MG, mz = 611.160, smooth.image = "gaussian", plusminus = 0.003,
     MG %>%
     normalize(method = "tic") %>%
     peakPick(method = "simple", SNR = 10) %>%
-    peakAlign(tolerance = 6, units = "ppm") %>%
+    peakAlign(tolerance = 10, units = "ppm") %>%
     process(BPPARAM = SerialParam())
 
 ## check the distribution again of the same m/z again
@@ -23,6 +23,7 @@ image(MG2, mz = 611.160, smooth.image = "gaussian", plusminus = 0.003,
       colorscale=magma, contrast.enhance="suppression")
 ## save the objects
 save(MG2, file = "Result/MG_processed.rda", compress = "xz") 
+
 ## plot mean spectrum
 pixel = dim(MG2@elementMetadata)[1]
 MG2_sub100 <- MG2[, c(seq(1, pixel, 100))]
