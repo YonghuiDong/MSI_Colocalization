@@ -1,61 +1,27 @@
-library(tidyverse)
-library(corrr)
 library(igraph)
-library(ggraph)
 
-##(1) to calculate all feature correlation, the results are too compact to visulize
-red_p2 <- process(peakFilter(Empty2, freq.min=0.05))
-aa = as.matrix(spectra(Empty2))
-test = cor(t(aa))
-net <- test
-net[net < 0.995]=0
-network = graph_from_adjacency_matrix(net, weighted=T, mode="undirected", diag=F)
+#(1) Calculate network for Rutin 611.155
+myColoc <- get(load("Result/coloc_317.rda"))
+myColoc_sub <- myColoc[myColoc$correlation >= 0.8,]
+setColour <- c("#f7f7f7", "#a1d76a", "#e9a3c9")
+myBreaks <- cut(myColoc_sub$correlation, breaks = c(0.8, 0.85, 0.9, 1), include.lowest = T)
 
-Isolated = which(degree(network)==0)
-G2 = delete.vertices(network, Isolated)
-LO = layout_as_tree(network)
-LO2 = LO[-Isolated,]
-plot(G2, layout=layout_randomly)
+## prepare links
+links <- cbind.data.frame(from = rep(317.068, dim(myColoc_sub)[1]),
+                          to = round(myColoc_sub$mz,3),
+                          weight = myColoc_sub$correlation)
+                          
+## prepare nodes
+nodes <- cbind.data.frame(id = round(myColoc_sub$mz,3),
+                          mycolor = setColour[myBreaks],
+                          mysize = c(15, 20, 25)[myBreaks])
 
-##(2) to calculate rutin network
-load("Result/coloc_rutin.rda")
-b = coloc_933[coloc_933$correlation >= 0.9,]
-n = matrix(b$correlation, nrow = 1)
-colnames(n) = round(b$mz,3)
-row.names(n) = round(b$mz[1], 3)
-network = graph_from_incidence_matrix(n, weighted=T)
+## plot
+net <- graph_from_data_frame(d = links, vertices = nodes, directed = T) 
+V(net)$color <- V(net)$mycolor
+coords <- layout_(net, as_star())
+coords2 <- nodes$mysize * coords
 
-##(2.1) use ggraph to beautify the result
-
-layout <- create_layout(network, layout = 'igraph', algorithm = 'nicely')
-
-ggraph(layout ) +
-  geom_edge_link(aes(edge_alpha = abs(n[1,]), 
-                     edge_width = abs(n[1, ]), color = n[1,])) +
-  guides(edge_alpha = "none", edge_width = "none") +
-  scale_edge_colour_gradientn(limits = c(0.8, 1), colors = c("#377EB8", "#FF7F00", "#E41A1C")) +
-  geom_node_point(color = "black", alpha = 0.7, size = 2) +
-  geom_node_text(aes(label = name), size = 7, repel = TRUE,alpha = 0.8, color = "black")+
-  theme_graph()
-
-
-##595
-b = coloc_595[coloc_595$correlation >= 0.8,]
-n = matrix(b$correlation, nrow = 1)
-colnames(n) = round(b$mz,3)
-row.names(n) = round(b$mz[1], 3)
-network = graph_from_incidence_matrix(n, weighted=T)
-
-##(2.1) use ggraph to beautify the result
-
-layout <- create_layout(network, layout = 'igraph', algorithm = 'nicely')
-
-ggraph(layout ) +
-  geom_edge_link(aes(edge_alpha = abs(n[1,]), 
-                     edge_width = abs(n[1, ]), color = n[1,])) +
-  guides(edge_alpha = "none", edge_width = "none") +
-  scale_edge_colour_gradientn(limits = c(0.8, 1), colors = c("#377EB8", "#FF7F00", "#E41A1C")) +
-  geom_node_point(color = "black", alpha = 0.7, size = 2) +
-  geom_node_text(aes(label = name), size = 7, repel = TRUE,alpha = 0.8, color = "black")+
-  theme_graph()
+plot(simplify(net), layout = coords2, edge.arrow.size = 0, 
+     edge.curved = 0, edge.width = 2, vertex.size = 8)
 
