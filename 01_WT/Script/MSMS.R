@@ -7,7 +7,7 @@ load("Result/coloc_611.rda")
 
 #(2) creat MS/MS for DHB 409
 ## subset data, select correlation > 0.9
-MSe <- coloc_409[coloc_409$correlation >= 0.9,]
+MSe <- coloc_409[coloc_409$correlation >= 0.8,]
 ## extract intensity
 int = as.vector(rep(NA, dim(MSe)[1]))
 for (i in 1:length(MSe$mz)) {
