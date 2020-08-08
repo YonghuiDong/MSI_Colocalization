@@ -1,7 +1,8 @@
 library(Cardinal)
 library(plotly)
-load("coloc_933.rda")
-MSe <- coloc_933[coloc_933$correlation > 0.8,]
+load("Result/Empty2_processed.rda")
+myColoc = get(load("Result/coloc_919.rda"))
+MSe <- myColoc[myColoc$correlation >= 9,]
 
 int = as.vector(rep(NA, dim(MSe)[1]))
 for (i in 1:length(MSe$mz)) {
