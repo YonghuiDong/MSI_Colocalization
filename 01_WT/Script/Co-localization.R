@@ -53,8 +53,9 @@ dev.off()
 
 
 #(3.2) co-localization of Rutin, m/z 611.161
-coloc_611 <- colocalized(MG2, mz= 611.161, n = 100, BPPARAM = SerialParam())
-save(coloc_611, file = "Result/coloc_611_new.rda", compress = "xz")
+BPPARAM  <- MulticoreParam(workers = 4, progressbar = T)
+coloc_611 <- colocalized(MG2, mz= 611.161, n = 100, BPPARAM = BPPARAM)
+save(coloc_611, file = "Result/coloc_611.rda", compress = "xz")
 
 pdf(file = file.path("Result/colocalization_611.pdf"), onefile=TRUE)
 for(i in 1:dim(coloc_611)[1]){
