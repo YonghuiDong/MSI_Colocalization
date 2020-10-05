@@ -27,4 +27,3 @@ MG_sub10 <- MG2[, c(seq(1, pixel, 10))]
 coloc_611_sub10 <- colocalized(MG_sub10, mz= 611.161, n = 100, BPPARAM=SerialParam())
 save(coloc_611_sub10, file = "Result/coloc_611_sub10.rda", compress = "xz")
 
-

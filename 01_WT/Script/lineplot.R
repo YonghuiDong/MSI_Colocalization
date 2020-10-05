@@ -69,9 +69,5 @@ p3 <- ggscatter(mydata, y = "Int611", x = "Ints",
                 conf.int = F) + 
   stat_cor(method = "pearson", label.x = 100, label.y = 1300)
 
-p3
-
-
-
 
 

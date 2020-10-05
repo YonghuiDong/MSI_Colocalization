@@ -2,27 +2,28 @@
 library(Cardinal)
 library(BiocParallel)
 library(plotly)
-path <- paste0("Data/MG/MG1", ".imzML")
-## Attention: The resolution parameter is important 
-MG <- readMSIData(path, resolution = 5, units = "ppm", attach.only = T)
+path <- paste0("Data/MR/MG1", ".imzML")
+## Attention: The resolution parameter is important. Here the mass range was sliced to 2000.
+MR <- readMSIData(path, resolution = 5, mass.range = c(150, 2000), 
+                  units = "ppm", attach.only = T)
 ## check resolution parameter by plotting known m/z
-image(MG, mz = 611.160, smooth.image = "gaussian", plusminus = 0.003, 
+image(MG, mz = 611.161, smooth.image = "gaussian", plusminus = 0.003, 
       colorscale=magma, contrast.enhance="suppression")
 
 #(2) pre-processing
-  MG2 <- 
-    MG %>%
+  MR2 <- 
+    MR %>%
     normalize(method = "tic") %>%
-    peakPick(method = "simple", SNR = 10) %>%
+    peakPick(method = "simple", SNR = 6) %>%
     peakAlign(tolerance = 10, units = "ppm") %>%
     process(BPPARAM = SerialParam())
 
 ## check the distribution again of the same m/z again
 ## make sure no mistakes produced during pre-processing
-image(MG2, mz = 611.160, smooth.image = "gaussian", plusminus = 0.003, 
+image(MG2, mz = 611.161, smooth.image = "gaussian", plusminus = 0.003, 
       colorscale=magma, contrast.enhance="suppression")
 ## save the objects
-save(MG2, file = "Result/MG_processed.rda", compress = "xz") 
+save(MG2, file = "Result/MR_processed.rda", compress = "xz") 
 
 ## plot mean spectrum
 pixel = dim(MG2@elementMetadata)[1]
@@ -38,7 +39,7 @@ ggplotly(p)
 
 #(3). co-localization
 #(3.1) co-localization of DHB, m/z 409.055
-coloc_409 <- colocalized(MG2, mz= 409.055, n = 100, BPPARAM=SerialParam())
+coloc_409 <- colocalized(MG2, mz= 409.055, n = 100, BPPARAM = SerialParam())
 save(coloc_409, file = "coloc_409.rda", compress = "xz")
 
 pdf(file = file.path("colocalization_409.pdf"), onefile=TRUE)
@@ -53,16 +54,19 @@ dev.off()
 
 
 #(3.2) co-localization of Rutin, m/z 611.161
-BPPARAM  <- MulticoreParam(workers = 4, progressbar = T)
-coloc_611 <- colocalized(MG2, mz= 611.161, n = 100, BPPARAM = BPPARAM)
+coloc_611 <- colocalized(MG2, mz= 611.161, n = 100, BPPARAM = SerialParam())
 save(coloc_611, file = "Result/coloc_611.rda", compress = "xz")
 
 pdf(file = file.path("Result/colocalization_611.pdf"), onefile=TRUE)
 for(i in 1:dim(coloc_611)[1]){
   darkmode()
-  print(image(MG2, mz = coloc_611$mz[i], smooth.image = "gaussian", 
+  print(image(MR2, mz = coloc_611$mz[i], smooth.image = "gaussian", 
               plusminus = 0.003, colorscale=magma, 
               contrast.enhance="suppression", normalize.image = "linear"))
   legend("topleft", legend= paste("correlation = ", round(coloc_611$correlation[i], 2)))
 }
 dev.off()
+
+#(3.3) co-localization of tomatine, m/z 1034.555
+coloc_1034 <- colocalized(MG2, mz= 1034.555, n = 100, BPPARAM = SerialParam())
+save(coloc_1034, file = "Result/coloc_1034.rda", compress = "xz")
