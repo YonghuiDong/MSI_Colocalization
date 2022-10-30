@@ -12,7 +12,9 @@ The R demo code can be downloaded from the [demo directory](https://github.com/Y
 
 The demo data is can be donwloaded from MetaboLights with the identifier [MTBLS487](https://www.ebi.ac.uk/metabolights/MTBLS487).
 
-Additionally, you can also download the converted files via our DropBox link [here](https://www.dropbox.com/sh/aff86j2dvw4i7ad/AACtmFnp1mZv6S2VPEvrFHVpa?dl=0). Note that you need to download both `imzML` and `ibd` files. 
+Additionally, you can also download the converted files via our DropBox link [here](https://www.dropbox.com/sh/aff86j2dvw4i7ad/AACtmFnp1mZv6S2VPEvrFHVpa?dl=0). 
+
+Note that you need to download both `imzML` and `ibd` files. 
 
 
 ## Acknowledgements
