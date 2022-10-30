@@ -1,0 +1,161 @@
+---
+title: "An Reproducible Example of Colocalization Analysis"
+author: "Yonghui Dong"
+date: "10/19/2020"
+output: html_document
+---
+
+## (1) Load packages and read data
+
+The dataset is downloaded from Metabolights. Accession number: [MTBLS487](<https://www.ebi.ac.uk/metabolights/MTBLS487/descriptors>). The data was obtained in positive ion mode over an m/z range of 300–2000 using a Thermo MALDI LTQ Orbitrap XL instrument (Thermo Fisher Scientific, Bremen, Germany). The spatial resolution was 50 micrometers. For more information about the dataset, readers are kindly referred to the original publication [(Hall et al., 2017)](https://link.springer.com/article/10.1007%2Fs11306-017-1252-5).
+
+```{r, message = FALSE}
+library(Cardinal)
+library(BiocParallel)
+library(plotly)
+path <- paste0("Data/test_POS", ".imzML")
+Brain <- readMSIData(path, resolution = 5, units = "ppm", 
+                     mass.range = c(300, 2000), attach.only = T)
+```
+
+## (2) Pre-processing
+
+```{r, message = FALSE, warning = FALSE}
+Brain2 <- 
+  Brain %>%
+  normalize(method = "tic") %>%
+  peakPick(method = "mad", SNR = 6) %>%
+  peakAlign(tolerance = 5, units = "ppm") %>%
+  process(BPPARAM = SerialParam())
+```
+
+Check the ion image of m/z 844.527 before and after pre-processing in order to make sure that chosen pre-processing parameters are fine.
+
+```{r}
+darkmode()
+##(2.1) before pre-processing
+image(Brain, mz = 844.527, smooth.image = "gaussian", plusminus = 0.03, colorscale = magma,
+      contrast.enhance = "suppression", normalize.image = "linear")
+##(2.2) after pre-processing
+image(Brain2, mz = 844.527, smooth.image = "gaussian", plusminus = 0.03, colorscale = magma,
+      contrast.enhance = "suppression", normalize.image = "linear")
+```
+
+## (3) Co-localization
+
+Here first 100 colocalized ions are retained. 
+
+```{r, message = FALSE, warning = FALSE}
+#(3.1) co-localization PC36:1
+coloc_826 <- colocalized(Brain2, mz= 826.572, n = 100, BPPARAM = SerialParam())
+#(3.2) co-localization PC38:6
+coloc_844 <- colocalized(Brain2, mz= 844.525, n = 100, BPPARAM = SerialParam())
+#(3.3) co-localization PC40:6
+coloc_872 <- colocalized(Brain2, mz= 872.557, n = 100, BPPARAM = SerialParam())
+```
+
+## (4) Extract in-source fragments, and create pseudo MS/MS spectrum
+
+```{r, message = FALSE, warning = FALSE}
+#(4.1) PC36:1
+mycoloc <- as.data.frame(coloc_826)
+MSe <- mycoloc[mycoloc$correlation >= 0.90,]
+## extract intensity
+int = as.vector(rep(NA, dim(MSe)[1]))
+for (i in 1:length(MSe$mz)) {
+  int[i] <- sum(spectra(Brain2)[features(Brain2,  mz = MSe$mz[i]),])
+}
+## interactive plot
+spec = cbind.data.frame(mz = MSe$mz, Int = int)
+p = ggplot(spec, aes(x = mz, ymax = Int/max(Int)*100, ymin = 0, colour = "red")) +
+  geom_linerange() +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 100*1.1)) +
+  theme_bw() +
+  ggtitle("m/z 826.577")
+ggplotly(p)
+
+#(4.2) PC38:6
+mycoloc <- as.data.frame(coloc_844)
+MSe <- mycoloc[mycoloc$correlation >= 0.90,]
+## extract intensity
+int = as.vector(rep(NA, dim(MSe)[1]))
+for (i in 1:length(MSe$mz)) {
+  int[i] <- sum(spectra(Brain2)[features(Brain2,  mz = MSe$mz[i]),])
+}
+## interactive plot
+spec = cbind.data.frame(mz = MSe$mz, Int = int)
+p = ggplot(spec, aes(x = mz, ymax = Int/max(Int)*100, ymin = 0, colour = "red")) +
+  geom_linerange() +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 100*1.1)) +
+  theme_bw() +
+  ggtitle("m/z 844.528")
+ggplotly(p)
+
+#(4.3) PC40:6
+mycoloc <- as.data.frame(coloc_872)
+MSe <- mycoloc[mycoloc$correlation >= 0.90,]
+## extract intensity
+int = as.vector(rep(NA, dim(MSe)[1]))
+for (i in 1:length(MSe$mz)) {
+  int[i] <- sum(spectra(Brain2)[features(Brain2,  mz = MSe$mz[i]),])
+}
+## interactive plot
+spec = cbind.data.frame(mz = MSe$mz, Int = int)
+p = ggplot(spec, aes(x = mz, ymax = Int/max(Int)*100, ymin = 0, colour = "red")) +
+  geom_linerange() +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 100*1.1)) +
+  theme_bw()+
+  ggtitle("m/z 872.559")
+ggplotly(p)
+```
+
+## (5) Plot MALDI images
+
+```{r, message = FALSE, warning = FALSE, eval = FALSE}
+#(5.1) PC36:1
+mycoloc <- as.data.frame(coloc_826)
+MSe <- mycoloc[mycoloc$correlation >= 0.90,]
+pdf(file = file.path("Result/colocalization_826.pdf"), onefile = TRUE)
+for(i in 1:dim(MSe)[1]){
+  darkmode()
+  print(image(Brain2, mz = MSe$mz[i], smooth.image = "gaussian", 
+              plusminus = 0.003, colorscale=magma, 
+              contrast.enhance="suppression", normalize.image = "linear"))
+  legend("topleft", legend= paste("correlation = ", round(MSe$correlation[i], 2)))
+}
+dev.off()
+
+#(5.2) PC38:6
+mycoloc <- as.data.frame(coloc_844)
+MSe <- mycoloc[mycoloc$correlation >= 0.90,]
+pdf(file = file.path("Result/colocalization_844.pdf"), onefile = TRUE)
+for(i in 1:dim(MSe)[1]){
+  darkmode()
+  print(image(Brain2, mz = MSe$mz[i], smooth.image = "gaussian", 
+              plusminus = 0.003, colorscale=magma, 
+              contrast.enhance="suppression", normalize.image = "linear"))
+  legend("topleft", legend= paste("correlation = ", round(MSe$correlation[i], 2)))
+}
+dev.off()
+
+#(5.3) PC38:6
+mycoloc <- as.data.frame(coloc_872)
+MSe <- mycoloc[mycoloc$correlation >= 0.90,]
+pdf(file = file.path("Result/colocalization_872.pdf"), onefile = TRUE)
+for(i in 1:dim(MSe)[1]){
+  darkmode()
+  print(image(Brain2, mz = MSe$mz[i], smooth.image = "gaussian", 
+              plusminus = 0.003, colorscale=magma, 
+              contrast.enhance="suppression", normalize.image = "linear"))
+  legend("topleft", legend= paste("correlation = ", round(MSe$correlation[i], 2)))
+}
+dev.off()
+```
+
+## Session information
+```{r, message = FALSE, warning = FALSE}
+sessioninfo::session_info()
+```
+
+
+
