@@ -29,6 +29,6 @@ We would like to thank Dr. Zoe Hall for kindly permitting us to use their [MSI d
 
 ## How to Cite
 
-Yonghui Dong, Nir Shachaf, Liron Feldberg, Ilana Rogachev, Uwe Heinig, Asaph Aharoni. PICA: Pixel Intensity Correlation Analysis for Deconvolution and Metabolite Identification in Mass Spectrometry Imaging
+Yonghui Dong, Nir Shachaf, Liron Feldberg, Ilana Rogachev, Uwe Heinig, Asaph Aharoni. PICA: Pixel Intensity Correlation Analysis for Deconvolution and Metabolite Identification in Mass Spectrometry Imaging.[Link](https://pubs.acs.org/doi/full/10.1021/acs.analchem.2c04778)
 
 
